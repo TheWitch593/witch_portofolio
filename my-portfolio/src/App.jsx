@@ -88,15 +88,117 @@ const App = () => {
     scrollToSection('contact');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.agreedToTerms) return;
-
-    // Construct Mailto Link
-    const subject = `Commission Request: ${formData.service}`;
-    const body = `Name: ${formData.name}%0D%0AEmail: ${formData.email}%0D%0AService: ${formData.service}%0D%0AAdd-ons: ${formData.addons}%0D%0A%0D%0AProject Details:%0D%0A${formData.details}%0D%0A%0D%0AI have read and agreed to the Terms of Service.`;
     
-    window.location.href = `mailto:lilithtpdolohov@gmail.com?subject=${subject}&body=${body}`;
+    // Validation
+    if (!formData.name.trim()) {
+      alert('Please enter your name');
+      return;
+    }
+    
+    if (!formData.email.trim()) {
+      alert('Please enter your email');
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+    
+    if (!formData.details.trim()) {
+      alert('Please provide project details');
+      return;
+    }
+    
+    if (!formData.agreedToTerms) {
+      alert('Please read and agree to the Terms of Service');
+      return;
+    }
+
+    // Prepare form data for submission
+    const formElement = e.target;
+    const submitButton = formElement.querySelector('button[type="submit"]');
+    
+    // Disable submit button and show loading state
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
+    }
+
+    try {
+      // Using Formspree (free service, no backend needed)
+      const response = await fetch('https://formspree.io/f/mblnzwjl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          service: formData.service,
+          addons: formData.addons || 'None',
+          details: formData.details,
+          subject: `Commission Request: ${formData.service}`,
+          message: `
+Service: ${formData.service}
+Add-ons: ${formData.addons || 'None'}
+
+Project Details:
+${formData.details}
+
+Terms Agreed: Yes
+
+Contact Email: ${formData.email}
+          `.trim()
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          service: 'Ebook Package',
+          addons: '',
+          details: '',
+          agreedToTerms: false
+        });
+      } else {
+        throw new Error('Form submission failed');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      
+      // Fallback to mailto if API fails
+      const subject = encodeURIComponent(`Commission Request: ${formData.service}`);
+      const bodyContent = `Name: ${formData.name}
+Email: ${formData.email}
+Service: ${formData.service}
+Add-ons: ${formData.addons || 'None'}
+
+Project Details:
+${formData.details}
+
+I have read and agreed to the Terms of Service.`;
+      const body = encodeURIComponent(bodyContent);
+      
+      window.location.href = `mailto:lilithtpdolohov@gmail.com?subject=${subject}&body=${body}`;
+      
+      alert('Opening your email client as backup. If it doesn\'t open, please email directly to lilithtpdolohov@gmail.com');
+    } finally {
+      // Re-enable submit button
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send Inquiry';
+      }
+    }
   };
 
   return (
@@ -282,7 +384,7 @@ const App = () => {
             </h1>
             
             <p className="text-xl text-amber-100/60 max-w-2xl mx-auto leading-relaxed font-sans font-light">
-              Specializing in fantasy, romance, and dark academia book covers. I weave typography and imagery into portals for your readers.
+              Specializing in fantasy, romance, and other genre book covers. I weave typography and imagery into portals for your readers.
             </p>
 
             <div className="flex flex-wrap justify-center gap-6 pt-8 font-sans">
@@ -326,10 +428,10 @@ const App = () => {
                <div className="h-px w-20 bg-amber-500/50"></div>
                
                <p className="text-amber-100/70 text-lg leading-relaxed font-sans font-light">
-                 I'm Lilith, a visual storyteller obsessed with the liminal spaces between reality and fiction. My design journey began in the darkroom of a fine arts college and evolved into digital sorcery.
+                 I'm Lilith, a 21-year-old Romanian artist working at the intersection of fine art and fantasy. For the past seven years, I've specialized in crafting book covers through photomanipulation and realistic digital illustration,transforming stories into their visual essence.
                </p>
                <p className="text-amber-100/70 text-lg leading-relaxed font-sans font-light">
-                 When I'm not blending layers in Photoshop, I'm scouring antique bookstores for vintage typography or studying the golden ratio in nature. I believe a book cover isn't just packaging—it's the first sentence of your story.
+                 When I'm not editing in Photoshop, you'll find me writing code or exploring old bookstores for typography inspiration, studying composition theory, or experimenting with new visual techniques. I believe a book cover is more than packaging—it's an invitation, the visual first line that draws readers into a world. My work is dedicated to making that moment unforgettable.
                </p>
                
                <div className="flex gap-4 pt-4">
@@ -515,14 +617,14 @@ const App = () => {
                   <span>lilithtpdolohov@gmail.com</span>
                 </div>
                 <div className="flex items-center gap-4 text-amber-200/80">
-                  <Twitter className="text-amber-500" size={20} />
-                  <span>@lilithdolohov</span>
+                  <Instagram className="text-amber-500" size={20} />
+                  <span>@lilith.p.6</span>
                 </div>
               </div>
 
               <div className="pt-8 flex gap-4">
-                 <SocialLink icon={<Instagram />} href="#" label="Instagram" />
-                 <SocialLink icon={<Twitter />} href="#" label="Twitter" />
+                 <SocialLink icon={<Instagram />} href="https://instagram.com/lilith.p.6" label="Instagram" />
+                 <SocialLink icon={<Mail />} href="mailto:lilithtpdolohov@gmail.com" label="Email" />
                  <SocialLink icon={<ExternalLink />} href="#" label="Behance" />
               </div>
             </div>
@@ -536,20 +638,22 @@ const App = () => {
                <form onSubmit={handleSubmit} className="space-y-6 font-sans">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <div className="space-y-2">
-                     <label className="text-xs uppercase tracking-widest text-amber-500/70">Your Name</label>
+                     <label className="text-xs uppercase tracking-widest text-amber-500/70">Your Name *</label>
                      <input 
                       type="text" 
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      required
                       className="w-full bg-[#0a0510] border border-white/10 p-4 text-amber-100 focus:border-amber-500/50 focus:outline-none transition-colors" 
                     />
                    </div>
                    <div className="space-y-2">
-                     <label className="text-xs uppercase tracking-widest text-amber-500/70">Your Email</label>
+                     <label className="text-xs uppercase tracking-widest text-amber-500/70">Your Email *</label>
                      <input 
                       type="email" 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      required
                       className="w-full bg-[#0a0510] border border-white/10 p-4 text-amber-100 focus:border-amber-500/50 focus:outline-none transition-colors" 
                     />
                    </div>
@@ -584,10 +688,12 @@ const App = () => {
                  </div>
 
                  <div className="space-y-2">
-                   <label className="text-xs uppercase tracking-widest text-amber-500/70">Project Details</label>
+                   <label className="text-xs uppercase tracking-widest text-amber-500/70">Project Details *</label>
                    <textarea 
                     value={formData.details}
                     onChange={(e) => setFormData({...formData, details: e.target.value})}
+                    required
+                    placeholder="Tell me about your book, genre, themes, and any specific ideas you have..."
                     className="w-full bg-[#0a0510] border border-white/10 p-4 text-amber-100 focus:border-amber-500/50 focus:outline-none transition-colors h-32 resize-none"
                    ></textarea>
                  </div>
@@ -618,6 +724,7 @@ const App = () => {
                  </div>
 
                  <button 
+                  type="submit"
                   disabled={!formData.agreedToTerms}
                   className={`w-full py-4 border font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3
                     ${formData.agreedToTerms 
@@ -733,7 +840,9 @@ const BookCover = ({ title, author, genre, color, placeholderText }) => (
 
 const SocialLink = ({ icon, href, label }) => (
   <a 
-    href={href} 
+    href={href}
+    target={href.startsWith('http') ? '_blank' : '_self'}
+    rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
     className="group relative p-4 rounded-full bg-white/5 text-amber-200/60 hover:text-amber-200 hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-amber-500/30"
     aria-label={label}
   >
