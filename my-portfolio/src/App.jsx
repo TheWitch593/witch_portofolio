@@ -431,7 +431,7 @@ I have read and agreed to the Terms of Service.`;
                  I'm Lilith, a 21-year-old Romanian artist working at the intersection of fine art and fantasy. For the past seven years, I've specialized in crafting book covers through photomanipulation and realistic digital illustration,transforming stories into their visual essence.
                </p>
                <p className="text-amber-100/70 text-lg leading-relaxed font-sans font-light">
-                 When I'm not editing in Photoshop, you'll find me writing code or exploring old bookstores for typography inspiration, studying composition theory, or experimenting with new visual techniques. I believe a book cover is more than packaging—it's an invitation, the visual first line that draws readers into a world. My work is dedicated to making that moment unforgettable.
+                 When I'm not editing in Photoshop, you'll find me writing code or exploring old bookstores for typography inspiration, studying composition theory, or experimenting with new visual techniques. I believe a book cover is more than packaging,it's an invitation, the visual first line that draws readers into a world. My work is dedicated to making that moment unforgettable.
                </p>
                
                <div className="flex gap-4 pt-4">
@@ -440,12 +440,8 @@ I have read and agreed to the Terms of Service.`;
                    <span className="text-[10px] uppercase tracking-widest text-amber-200/50">Years Exp.</span>
                  </div>
                  <div className="text-center p-4 border border-white/5 bg-white/5 rounded-sm">
-                   <h4 className="text-3xl font-serif text-amber-400">100+</h4>
+                   <h4 className="text-3xl font-serif text-amber-400">50+</h4>
                    <span className="text-[10px] uppercase tracking-widest text-amber-200/50">Covers</span>
-                 </div>
-                 <div className="text-center p-4 border border-white/5 bg-white/5 rounded-sm">
-                   <h4 className="text-3xl font-serif text-amber-400">NYT</h4>
-                   <span className="text-[10px] uppercase tracking-widest text-amber-200/50">Bestsellers</span>
                  </div>
                </div>
              </div>
@@ -466,7 +462,7 @@ I have read and agreed to the Terms of Service.`;
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
             <PricingCard 
               title="Ebook Package"
-              price="260-300 USD"
+              price="220 USD"
               features={[
                 "The ebook cover",
                 "No title cover artwork",
@@ -478,7 +474,7 @@ I have read and agreed to the Terms of Service.`;
             />
             <PricingCard 
               title="Paperback Package"
-              price="300-340 USD"
+              price="300 USD"
               features={[
                 "The ebook cover",
                 "The paperback cover",
@@ -492,7 +488,7 @@ I have read and agreed to the Terms of Service.`;
             />
             <PricingCard 
               title="Dustjacket Package"
-              price="340-370 USD"
+              price="340 USD"
               features={[
                 "The ebook cover",
                 "Paperback/Regular hardback cover",
@@ -504,20 +500,7 @@ I have read and agreed to the Terms of Service.`;
               note="Need a design for the naked hardcover? See the package below."
               onSelect={handleSelectPackage}
             />
-            <PricingCard 
-              title="Dustjacket + Naked Hardcase"
-              price="370-450 USD"
-              features={[
-                "The ebook cover",
-                "The paperback cover",
-                "The dustjacket cover",
-                "The naked hardcase cover",
-                "No title cover artwork",
-                "Artwork background"
-              ]}
-              highlight={true}
-              onSelect={handleSelectPackage}
-            />
+            
           </div>
 
           {/* Add-ons Section */}
@@ -531,7 +514,7 @@ I have read and agreed to the Terms of Service.`;
                <AddOnItem name="Bookmark Design" price="20 USD" />
                <AddOnItem name="Title & Cover Reveal" price="20 USD" />
                <AddOnItem name="Promotional Story Quotes" price="10 USD each" />
-               <AddOnItem name="3D Mockup" price="10 USD each" />
+               <AddOnItem name="3D Mockup" price="20 USD each" />
              </div>
           </div>
         </section>
