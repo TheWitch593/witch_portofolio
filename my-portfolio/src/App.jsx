@@ -595,10 +595,10 @@ I have read and agreed to the Terms of Service.`;
               </p>
               
               <div className="space-y-4 font-sans text-sm tracking-wide">
-                <div className="flex items-center gap-4 text-amber-200/80">
+                <a href="mailto:lilithtpdolohov@gmail.com" className="flex items-center gap-4 text-amber-200/80 hover:text-amber-100 transition-colors">
                   <Mail className="text-amber-500" size={20} />
                   <span>lilithtpdolohov@gmail.com</span>
-                </div>
+                </a>
                 <div className="flex items-center gap-4 text-amber-200/80">
                   <Instagram className="text-amber-500" size={20} />
                   <span>@lilith.p.6</span>
