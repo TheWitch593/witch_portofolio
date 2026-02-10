@@ -15,33 +15,13 @@ import {
   FileText
 } from 'lucide-react';
 
-// Custom Snake Icon Component
-const SnakeIcon = ({ size = 24, className = "" }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M16 11c3 0 6.4 1.5 3.6 5.6-1.7 2.5-5.7.5-4-2.1.9-1.4 2.8-.7 1.4.9-.8 1-1.9.9-2.5.3-1.3-1.3.2-3 1.5-3z" />
-    <path d="M9 7c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z" />
-    <path d="M13 11c0-3.3-2.7-6-6-6S1 7.7 1 11c0 2.3 1.3 4.3 3.3 5.3" />
-    <path d="M13 11l4 0" />
-    <circle cx="9" cy="9" r="0.5" fill="currentColor" />
-  </svg>
-);
-
 const App = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState('home');
   const [showTerms, setShowTerms] = useState(false);
+  const [isHeroInView, setIsHeroInView] = useState(true);
+  const [isNavRevealed, setIsNavRevealed] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -64,6 +44,23 @@ const App = () => {
       const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const scroll = `${totalScroll / windowHeight}`;
       setScrollProgress(Number(scroll));
+
+      const heroThreshold = window.innerHeight * 0.8;
+      setIsHeroInView(totalScroll < heroThreshold);
+
+      const sectionIds = ['home', 'about', 'services', 'portfolio', 'contact'];
+      const scrollY = totalScroll + 140;
+      let currentSection = 'home';
+
+      for (const id of sectionIds) {
+        const section = document.getElementById(id);
+        if (!section) continue;
+        if (scrollY >= section.offsetTop) {
+          currentSection = id;
+        }
+      }
+
+      setActiveSection(currentSection);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -81,6 +78,7 @@ const App = () => {
       element.scrollIntoView({ behavior: 'smooth' });
       setActiveSection(id);
     }
+    setIsNavRevealed(false);
   };
 
   const handleSelectPackage = (packageName) => {
@@ -325,13 +323,30 @@ I have read and agreed to the Terms of Service.`;
       <div className="fixed top-0 left-0 h-1 bg-gradient-to-r from-purple-800 via-amber-500 to-purple-800 z-50 transition-all duration-100" style={{ width: `${scrollProgress * 100}%` }}></div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-40 backdrop-blur-md border-b border-amber-500/10 bg-[#130b20]/90">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+      <nav
+        className={`fixed top-0 w-full z-40 transition-all duration-300 overflow-hidden
+          ${isHeroInView || isNavRevealed
+            ? 'border-b border-amber-500/10 bg-[#130b20]/90 backdrop-blur-md max-h-32 opacity-100'
+            : 'border-b border-transparent bg-transparent backdrop-blur-0 max-h-10 opacity-0 cursor-pointer'}
+        `}
+        onMouseEnter={() => setIsNavRevealed(true)}
+        onMouseLeave={() => setIsNavRevealed(false)}
+        onClick={() => {
+          if (!isHeroInView) {
+            setIsNavRevealed((prev) => !prev);
+          }
+        }}
+      >
+        <div className={`max-w-7xl mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isHeroInView || isNavRevealed ? 'py-5' : 'py-2'}`}>
           <div className="text-2xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 flex items-center gap-3 cursor-pointer" onClick={() => scrollToSection('home')}>
-            <SnakeIcon className="text-amber-400 w-8 h-8" />
+            <img
+              src="/assets/Logo.png"
+              alt="Lilith Dolohov logo"
+              className="w-14 h-14 object-contain"
+            />
             <span className="tracking-widest uppercase text-lg">Lilith Dolohov</span>
           </div>
-          <div className="hidden md:flex gap-6 text-xs font-medium tracking-widest uppercase text-amber-200/60 font-sans">
+          <div className={`hidden md:flex gap-6 text-xs font-medium tracking-widest uppercase text-amber-200/60 font-sans transition-opacity duration-300 ${isHeroInView || isNavRevealed ? 'opacity-100' : 'opacity-0'}`}>
             {[
               { id: 'home', label: 'Home' },
               { id: 'about', label: 'About' },
@@ -588,15 +603,31 @@ I have read and agreed to the Terms of Service.`;
               placeholderText="Golden Birdcage"
             />
             <BookCover 
-              title="Threaded in Red"
-              author="Nala"
-              genre="Dark Romance"
-              color="from-emerald-900 to-teal-900"
-              image="/assets/threats.jpg"
-              placeholderText="Golden Birdcage"
+              title="Pasiunea mea secretă"
+              author="Anna Tyboleyn"
+              genre="Romance"
+              color="from-purple-900 to-indigo-900"
+              image="/assets/pasiunea.jpg"
+              placeholderText="Drumul"
             />
-             
+            <BookCover 
+              title="Aphelion"
+              author="Aurette"
+              genre="fantasy"
+              color="from-red-900 to-rose-900"
+              image="/assets/aphe.jpg"
+              placeholderText="Orgolii"
+            />
+             <BookCover
+              title="Un Babel"
+              author="Nala"
+              genre="YA Romance"
+              color="from-amber-900 to-yellow-900"
+              image="/assets/un.jpg"
+              placeholderText="Golden Gear"
+            />
           </div>
+         
         </section>
 
         {/* CONTACT SECTION WITH FORM */}
@@ -634,7 +665,11 @@ I have read and agreed to the Terms of Service.`;
             {/* Contact Form Side */}
             <div className="md:w-2/3 bg-white/5 p-8 md:p-12 border border-white/10 rounded-sm relative">
                <div className="absolute top-0 right-0 p-4 opacity-20">
-                 <SnakeIcon size={100} className="text-amber-500/20" />
+                 <img
+                   src="/assets/Logo.png"
+                   alt="Lilith Dolohov logo watermark"
+                   className="w-[160px] h-[160px] object-contain"
+                 />
                </div>
                
                <form onSubmit={handleSubmit} className="space-y-6 font-sans">
@@ -671,10 +706,6 @@ I have read and agreed to the Terms of Service.`;
                      <option>Ebook Package</option>
                      <option>Paperback Package</option>
                      <option>Dustjacket Package</option>
-                     <option>Dustjacket + Naked Hardcase</option>
-                     <option>Illustration Commission</option>
-                     <option>Typography & Title Design</option>
-                     <option>Other / General Inquiry</option>
                    </select>
                  </div>
 
