@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, 
   BookOpen, 
@@ -9,7 +9,9 @@ import {
   Send,
   Shield,
   X,
-  FileText
+  FileText,
+  ArrowLeft,
+  ArrowRight
 } from 'lucide-react';
 
 const App = () => {
@@ -18,8 +20,10 @@ const App = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [showTerms, setShowTerms] = useState(false);
   const [isHeroInView, setIsHeroInView] = useState(true);
-  const [isNavRevealed, setIsNavRevealed] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isAboutInView, setIsAboutInView] = useState(false);
+  const aboutRef = useRef(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -70,13 +74,33 @@ const App = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!aboutRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsAboutInView(entry.isIntersecting);
+      },
+      {
+        threshold: 0.35,
+        rootMargin: '0px 0px -10% 0px'
+      }
+    );
+
+    observer.observe(aboutRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
       setActiveSection(id);
     }
-    setIsNavRevealed(false);
+    setIsMobileNavOpen(false);
   };
 
   const handleSelectPackage = (packageName) => {
@@ -352,20 +376,7 @@ I have read and agreed to the Terms of Service.`;
       )}
 
       {/* Navigation */}
-      <nav
-        className={`fixed top-0 w-full z-40 transition-all duration-300 overflow-hidden
-          ${isHeroInView || isNavRevealed
-            ? 'border-b border-amber-500/10 bg-[#130b20]/90 backdrop-blur-md max-h-32 opacity-100'
-            : 'border-b border-transparent bg-transparent backdrop-blur-0 max-h-10 opacity-0 cursor-pointer'}
-        `}
-        onMouseEnter={() => setIsNavRevealed(true)}
-        onMouseLeave={() => setIsNavRevealed(false)}
-        onClick={() => {
-          if (!isHeroInView) {
-            setIsNavRevealed((prev) => !prev);
-          }
-        }}
-      >
+      <nav className="sticky top-0 w-full z-40 border-b border-amber-500/10 bg-[#130b20]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center py-5">
           <div className="text-2xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 flex items-center gap-3 cursor-pointer" onClick={() => scrollToSection('home')}>
             <img
@@ -376,7 +387,7 @@ I have read and agreed to the Terms of Service.`;
             />
             <span className="tracking-widest uppercase text-lg">Lilith Dolohov</span>
           </div>
-          <div className={`hidden md:flex gap-6 text-xs font-medium tracking-widest uppercase text-amber-200/60 font-sans transition-opacity duration-300 ${isHeroInView || isNavRevealed ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="hidden md:flex gap-6 text-xs font-medium tracking-widest uppercase text-amber-200/60 font-sans">
             {[
               { id: 'home', label: 'Home' },
               { id: 'about', label: 'About' },
@@ -401,7 +412,42 @@ I have read and agreed to the Terms of Service.`;
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => setIsMobileNavOpen((prev) => !prev)}
+            className="md:hidden inline-flex items-center justify-center w-10 h-10 border border-amber-500/30 text-amber-200/70 hover:text-amber-100 hover:border-amber-500/60 transition-colors"
+            aria-label="Toggle navigation"
+            aria-expanded={isMobileNavOpen}
+          >
+            <span className="sr-only">Toggle navigation</span>
+            <div className="flex flex-col gap-1">
+              <span className={`h-px w-5 bg-current transition-transform duration-300 ${isMobileNavOpen ? 'translate-y-[5px] rotate-45' : ''}`}></span>
+              <span className={`h-px w-5 bg-current transition-opacity duration-300 ${isMobileNavOpen ? 'opacity-0' : 'opacity-100'}`}></span>
+              <span className={`h-px w-5 bg-current transition-transform duration-300 ${isMobileNavOpen ? '-translate-y-[5px] -rotate-45' : ''}`}></span>
+            </div>
+          </button>
         </div>
+        {isMobileNavOpen && (
+          <div className="md:hidden border-t border-amber-500/10 bg-[#130b20]/95 backdrop-blur-md px-6 py-4">
+            <div className="flex flex-col gap-3 text-xs font-medium tracking-widest uppercase text-amber-200/70 font-sans">
+              {[
+                { id: 'home', label: 'Home' },
+                { id: 'about', label: 'About' },
+                { id: 'portfolio', label: 'Portfolio' },
+                { id: 'services', label: 'Services' },
+                { id: 'contact', label: 'Contact' }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className={`py-2 text-left transition-colors duration-200 ${activeSection === item.id ? 'text-amber-100' : 'hover:text-amber-200'}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Main Content */}
@@ -450,20 +496,26 @@ I have read and agreed to the Terms of Service.`;
 
         </section>
 
+        <SectionNav
+          prevId={null}
+          nextId="about"
+          onNavigate={scrollToSection}
+        />
+
         {/* ABOUT SECTION */}
         <section id="about" className="py-32 border-t border-amber-500/10">
-          <div className="flex flex-col md:flex-row gap-16 items-center">
+          <div ref={aboutRef} className="group flex flex-col md:flex-row gap-16 items-center">
              <div className="md:w-1/2 relative">
                 {/* Decorative Frame for Image */}
                 <div className="absolute -inset-4 border border-amber-500/20 rotate-3 rounded-sm"></div>
                 <div className="absolute -inset-4 border border-purple-500/20 -rotate-2 rounded-sm"></div>
-                <div className="group relative h-[500px] w-full bg-[#0a0510] border border-white/10 flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.25),transparent_55%)]"></div>
+                <div className="relative h-[500px] w-full bg-[#0a0510] border border-white/10 flex items-center justify-center overflow-hidden">
+                  <div className={`absolute inset-0 transition-opacity duration-700 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.25),transparent_55%)] ${isAboutInView ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}></div>
                   <div className="absolute inset-0 border border-amber-500/20 mix-blend-screen opacity-60"></div>
                   <img 
                   src="/assets/eu.png" 
                   alt="Lilith Dolohov" 
-                  className="relative h-[500px] w-full object-cover border border-white/10 grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-700"
+                  className={`relative h-[500px] w-full object-cover border border-white/10 grayscale brightness-75 transition-all duration-700 ${isAboutInView ? 'grayscale-0 brightness-100' : ''} group-hover:grayscale-0 group-hover:brightness-100`}
                   />
                 </div>
              </div>
@@ -492,6 +544,12 @@ I have read and agreed to the Terms of Service.`;
              </div>
           </div>
         </section>
+
+        <SectionNav
+          prevId="home"
+          nextId="portfolio"
+          onNavigate={scrollToSection}
+        />
 
         {/* PORTFOLIO GRID */}
         <section id="portfolio" className="py-32 border-t border-amber-500/10">
@@ -586,6 +644,12 @@ I have read and agreed to the Terms of Service.`;
          
         </section>
 
+        <SectionNav
+          prevId="about"
+          nextId="services"
+          onNavigate={scrollToSection}
+        />
+
         {/* SERVICES (Formerly Pricing) */}
         <section id="services" className="py-32 border-t border-amber-500/10">
           <div className="text-center mb-20 space-y-4">
@@ -657,6 +721,12 @@ I have read and agreed to the Terms of Service.`;
           </div>
         </section>
 
+        <SectionNav
+          prevId="portfolio"
+          nextId="contact"
+          onNavigate={scrollToSection}
+        />
+
         {/* CONTACT SECTION WITH FORM */}
         <section id="contact" className="py-32 border-t border-amber-500/10">
           <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 px-6">
@@ -712,8 +782,9 @@ I have read and agreed to the Terms of Service.`;
                <form onSubmit={handleSubmit} className="space-y-6 font-sans">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <div className="space-y-2">
-                     <label className="text-xs uppercase tracking-widest text-amber-500/70">Your Name *</label>
+                     <label htmlFor="contact-name" className="text-xs uppercase tracking-widest text-amber-500/70">Your Name *</label>
                      <input 
+                      id="contact-name"
                       type="text" 
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -722,8 +793,9 @@ I have read and agreed to the Terms of Service.`;
                     />
                    </div>
                    <div className="space-y-2">
-                     <label className="text-xs uppercase tracking-widest text-amber-500/70">Your Email *</label>
+                     <label htmlFor="contact-email" className="text-xs uppercase tracking-widest text-amber-500/70">Your Email *</label>
                      <input 
+                      id="contact-email"
                       type="email" 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -734,8 +806,9 @@ I have read and agreed to the Terms of Service.`;
                  </div>
                  
                  <div className="space-y-2">
-                   <label className="text-xs uppercase tracking-widest text-amber-500/70">Service Required</label>
+                   <label htmlFor="contact-service" className="text-xs uppercase tracking-widest text-amber-500/70">Service Required</label>
                    <select 
+                     id="contact-service"
                      value={formData.service}
                      onChange={(e) => setFormData({...formData, service: e.target.value})}
                      className="w-full bg-[#0a0510] border border-white/10 p-4 text-amber-100 focus:border-amber-500/50 focus:outline-none transition-colors appearance-none"
@@ -747,8 +820,9 @@ I have read and agreed to the Terms of Service.`;
                  </div>
 
                  <div className="space-y-2">
-                   <label className="text-xs uppercase tracking-widest text-amber-500/70">Add-ons (Optional)</label>
+                   <label htmlFor="contact-addons" className="text-xs uppercase tracking-widest text-amber-500/70">Add-ons (Optional)</label>
                    <input 
+                     id="contact-addons"
                       type="text" 
                       value={formData.addons}
                       onChange={(e) => setFormData({...formData, addons: e.target.value})}
@@ -758,8 +832,9 @@ I have read and agreed to the Terms of Service.`;
                  </div>
 
                  <div className="space-y-2">
-                   <label className="text-xs uppercase tracking-widest text-amber-500/70">Project Details *</label>
+                   <label htmlFor="contact-details" className="text-xs uppercase tracking-widest text-amber-500/70">Project Details *</label>
                    <textarea 
+                    id="contact-details"
                     value={formData.details}
                     onChange={(e) => setFormData({...formData, details: e.target.value})}
                     required
@@ -922,6 +997,39 @@ const SocialLink = ({ icon, href, label }) => (
       {label}
     </span>
   </a>
+);
+
+const SectionNav = ({ prevId, nextId, onNavigate }) => (
+  <div className="py-10 flex items-center justify-between border-t border-amber-500/10">
+    <button
+      type="button"
+      onClick={() => prevId && onNavigate(prevId)}
+      disabled={!prevId}
+      className={`inline-flex items-center gap-2 px-5 py-2 rounded-full border text-xs font-bold uppercase tracking-widest transition-all duration-300
+        ${prevId
+          ? 'border-amber-500/30 text-amber-200/80 hover:text-amber-100 hover:border-amber-500/60 hover:bg-amber-500/10'
+          : 'border-white/10 text-white/20 cursor-not-allowed'}
+      `}
+      aria-label="Go to previous section"
+    >
+      <ArrowLeft size={14} />
+      Back
+    </button>
+    <button
+      type="button"
+      onClick={() => nextId && onNavigate(nextId)}
+      disabled={!nextId}
+      className={`inline-flex items-center gap-2 px-5 py-2 rounded-full border text-xs font-bold uppercase tracking-widest transition-all duration-300
+        ${nextId
+          ? 'border-amber-500/30 text-amber-200/80 hover:text-amber-100 hover:border-amber-500/60 hover:bg-amber-500/10'
+          : 'border-white/10 text-white/20 cursor-not-allowed'}
+      `}
+      aria-label="Go to next section"
+    >
+      Forward
+      <ArrowRight size={14} />
+    </button>
+  </div>
 );
 
 export default App;
