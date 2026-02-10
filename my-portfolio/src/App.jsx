@@ -415,11 +415,14 @@ I have read and agreed to the Terms of Service.`;
                 {/* Decorative Frame for Image */}
                 <div className="absolute -inset-4 border border-amber-500/20 rotate-3 rounded-sm"></div>
                 <div className="absolute -inset-4 border border-purple-500/20 -rotate-2 rounded-sm"></div>
-                
-                <div className="relative h-[500px] w-full bg-[#0a0510] border border-white/10 flex items-center justify-center overflow-hidden grayscale hover:grayscale-0 transition-all duration-700">
-                  <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]"></div>
-                  <User size={64} className="text-amber-500/50" />
-                  <span className="absolute bottom-4 text-xs font-sans tracking-widest text-amber-500/50">Designer Portrait Placeholder</span>
+                <div className="group relative h-[500px] w-full bg-[#0a0510] border border-white/10 flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.25),transparent_55%)]"></div>
+                  <div className="absolute inset-0 border border-amber-500/20 mix-blend-screen opacity-60"></div>
+                  <img 
+                  src="/assets/eu.png" 
+                  alt="Lilith Dolohov" 
+                  className="relative h-[500px] w-full object-cover border border-white/10 grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-700"
+                  />
                 </div>
              </div>
              
@@ -462,7 +465,7 @@ I have read and agreed to the Terms of Service.`;
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
             <PricingCard 
               title="Ebook Package"
-              price="220 USD"
+              price="160 USD"
               features={[
                 "The ebook cover",
                 "No title cover artwork",
@@ -474,7 +477,7 @@ I have read and agreed to the Terms of Service.`;
             />
             <PricingCard 
               title="Paperback Package"
-              price="300 USD"
+              price="250 USD"
               features={[
                 "The ebook cover",
                 "The paperback cover",
@@ -488,7 +491,7 @@ I have read and agreed to the Terms of Service.`;
             />
             <PricingCard 
               title="Dustjacket Package"
-              price="340 USD"
+              price="300 USD"
               features={[
                 "The ebook cover",
                 "Paperback/Regular hardback cover",
@@ -535,48 +538,64 @@ I have read and agreed to the Terms of Service.`;
 
           {/* Book Grid - Vertical Aspect Ratio */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 px-4 md:px-0">
+            
             <BookCover 
-              title="The Midnight Crown"
-              author="J.K. Sterling"
-              genre="YA Fantasy"
+              title="Promises in the"
+              author="Scarlett Winters "
+              genre="Dark Romance"
+              color="from-slate-900 to-gray-800"
+              image="/assets/promises.jpg"
+              placeholderText="Shadow Figure"
+            />
+            <BookCover 
+              title="Drumul înapoi spre mine"
+              author="Anna Tyboleyn"
+              genre="Contemporary Fiction"
               color="from-purple-900 to-indigo-900"
-              placeholderText="Crown & Dagger"
+              image="/assets/IMG_20250216_173512_648.jpg"
+              placeholderText="Drumul"
             />
             <BookCover 
-              title="Velvet & Steel"
-              author="Elena Rose"
-              genre="Paranormal Romance"
+              title="Orgolii"
+              author="Anna Tyboleyn"
+              genre="Dark Romance"
               color="from-red-900 to-rose-900"
-              placeholderText="Rose on Fire"
+              image="/assets/IMG_20250216_221331_100.jpg"
+              placeholderText="Orgolii"
             />
             <BookCover 
-              title="The Alchemist's Daughter"
-              author="M.T. Black"
-              genre="Steampunk / Magic"
+              title="Îngerul meu căzut"
+              author="Daria"
+              genre="Dark Fantasy Romance"
+              color="from-cyan-900 to-blue-900"
+              image="/assets/îngerul.jpg"
+              placeholderText="Space Void"
+            />
+             <BookCover 
+              title="Eroare"
+              author="VLADISLAVA PANFILI"
+              genre="Thriller&Mystery"
               color="from-amber-900 to-yellow-900"
+              image="/assets/eroare.jpg"
               placeholderText="Golden Gear"
             />
             <BookCover 
-              title="Whispers in the Void"
-              author="S.L. Vane"
-              genre="Sci-Fi Thriller"
-              color="from-cyan-900 to-blue-900"
-              placeholderText="Space Void"
-            />
-            <BookCover 
-              title="Gilded Cage"
-              author="Victoria Aveyard"
-              genre="Historical Fantasy"
+              title="Threaded in Red"
+              author="Nala"
+              genre="Dark Romance"
               color="from-emerald-900 to-teal-900"
+              image="/assets/threats.jpg"
               placeholderText="Golden Birdcage"
             />
-             <BookCover 
-              title="Heart of Shadows"
-              author="Lilith D."
-              genre="Dark Fantasy"
-              color="from-slate-900 to-gray-800"
-              placeholderText="Shadow Figure"
+            <BookCover 
+              title="Threaded in Red"
+              author="Nala"
+              genre="Dark Romance"
+              color="from-emerald-900 to-teal-900"
+              image="/assets/threats.jpg"
+              placeholderText="Golden Birdcage"
             />
+             
           </div>
         </section>
 
@@ -788,25 +807,26 @@ const AddOnItem = ({ name, price }) => (
   </div>
 );
 
-const BookCover = ({ title, author, genre, color, placeholderText }) => (
+const BookCover = ({ title, author, genre, color, placeholderText, image }) => (
   <div className="group cursor-pointer relative perspective-1000">
     {/* Book Aspect Ratio Container (2:3 ratio standard for books) */}
     <div className="relative w-full pb-[150%] shadow-2xl transition-all duration-500 transform group-hover:-translate-y-3 group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.7)]">
       
       {/* Background/Image Placeholder */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${color} overflow-hidden border border-white/10`}>
+      <div className="absolute inset-0 overflow-hidden border border-white/10">
+        {image ? (
+          <img 
+            src={image}
+            alt={`${title} cover`}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div className={`absolute inset-0 bg-gradient-to-br ${color}`} />
+        )}
+
         {/* Decorative pattern overlay */}
-        <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]"></div>
+        <div className="absolute inset-0 opacity-25 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]"></div>
         
-        {/* Mock Content for Placeholder */}
-        <div className="absolute inset-0 flex flex-col justify-between p-6 text-center">
-          <span className="text-[10px] tracking-[0.3em] uppercase text-white/60 pt-4">{author}</span>
-          <div className="space-y-2">
-            <h3 className="font-serif text-3xl text-white drop-shadow-lg leading-tight">{title}</h3>
-            <div className="w-8 h-px bg-white/50 mx-auto"></div>
-          </div>
-          <span className="text-[10px] tracking-widest uppercase text-amber-400/80 pb-4">{genre}</span>
-        </div>
         
         {/* Shine Effect */}
         <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform"></div>
