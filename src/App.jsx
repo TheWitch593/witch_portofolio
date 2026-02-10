@@ -4,11 +4,8 @@ import {
   BookOpen, 
   Mail, 
   Instagram, 
-  Twitter, 
   ExternalLink, 
-  ChevronDown,
   Star,
-  User,
   Send,
   Shield,
   X,
@@ -22,6 +19,7 @@ const App = () => {
   const [showTerms, setShowTerms] = useState(false);
   const [isHeroInView, setIsHeroInView] = useState(true);
   const [isNavRevealed, setIsNavRevealed] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -48,7 +46,7 @@ const App = () => {
       const heroThreshold = window.innerHeight * 0.8;
       setIsHeroInView(totalScroll < heroThreshold);
 
-      const sectionIds = ['home', 'about', 'services', 'portfolio', 'contact'];
+      const sectionIds = ['home', 'about', 'portfolio', 'services', 'contact'];
       const scrollY = totalScroll + 140;
       let currentSection = 'home';
 
@@ -84,6 +82,31 @@ const App = () => {
   const handleSelectPackage = (packageName) => {
     setFormData(prev => ({ ...prev, service: packageName }));
     scrollToSection('contact');
+  };
+
+  const handleCopyEmail = async () => {
+    const email = 'lilithtpdolohov@gmail.com';
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(email);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = email;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy email:', error);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -322,6 +345,12 @@ I have read and agreed to the Terms of Service.`;
       {/* Progress Bar (Gold) */}
       <div className="fixed top-0 left-0 h-1 bg-gradient-to-r from-purple-800 via-amber-500 to-purple-800 z-50 transition-all duration-100" style={{ width: `${scrollProgress * 100}%` }}></div>
 
+      {copiedEmail && (
+        <div className="fixed bottom-6 right-6 z-[60] bg-amber-500 text-[#130b20] text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-sm shadow-lg">
+          Email copied
+        </div>
+      )}
+
       {/* Navigation */}
       <nav
         className={`fixed top-0 w-full z-40 transition-all duration-300 overflow-hidden
@@ -337,12 +366,13 @@ I have read and agreed to the Terms of Service.`;
           }
         }}
       >
-        <div className={`max-w-7xl mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isHeroInView || isNavRevealed ? 'py-5' : 'py-2'}`}>
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center py-5">
           <div className="text-2xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 flex items-center gap-3 cursor-pointer" onClick={() => scrollToSection('home')}>
             <img
               src="/assets/Logo.png"
               alt="Lilith Dolohov logo"
-              className="w-14 h-14 object-contain"
+              className="w-14 h-14 object-contain select-none"
+              draggable={false}
             />
             <span className="tracking-widest uppercase text-lg">Lilith Dolohov</span>
           </div>
@@ -350,8 +380,8 @@ I have read and agreed to the Terms of Service.`;
             {[
               { id: 'home', label: 'Home' },
               { id: 'about', label: 'About' },
-              { id: 'services', label: 'Services' },
               { id: 'portfolio', label: 'Portfolio' },
+              { id: 'services', label: 'Services' },
               { id: 'contact', label: 'Contact' }
             ].map((item) => (
               <button 
@@ -378,7 +408,7 @@ I have read and agreed to the Terms of Service.`;
       <main className="relative z-10 max-w-7xl mx-auto px-6">
         
         {/* HERO SECTION */}
-        <section id="home" className="min-h-screen flex flex-col justify-center items-center text-center pt-20">
+        <section id="home" className="min-h-[90vh] flex flex-col justify-center items-center text-center pt-20">
           <div className="space-y-8 max-w-4xl relative">
             {/* Decorative Elements */}
             <div className="absolute -top-20 left-1/2 -translate-x-1/2 text-amber-500/10 animate-spin-slow pointer-events-none">
@@ -418,9 +448,6 @@ I have read and agreed to the Terms of Service.`;
             </div>
           </div>
 
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-amber-500/50">
-            <ChevronDown className="w-6 h-6" />
-          </div>
         </section>
 
         {/* ABOUT SECTION */}
@@ -462,77 +489,6 @@ I have read and agreed to the Terms of Service.`;
                    <span className="text-[10px] uppercase tracking-widest text-amber-200/50">Covers</span>
                  </div>
                </div>
-             </div>
-          </div>
-        </section>
-
-        {/* SERVICES (Formerly Pricing) */}
-        <section id="services" className="py-32 border-t border-amber-500/10">
-          <div className="text-center mb-20 space-y-4">
-            <h2 className="text-5xl font-serif text-amber-100 flex justify-center items-center gap-4">
-              <div className="h-px w-12 bg-amber-500/50"></div>
-              <span>Services</span>
-              <div className="h-px w-12 bg-amber-500/50"></div>
-            </h2>
-            <p className="text-amber-200/50 font-sans tracking-wide">CHOOSE YOUR ARTIFACT PACKAGE</p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-            <PricingCard 
-              title="Ebook Package"
-              price="160 USD"
-              features={[
-                "The ebook cover",
-                "No title cover artwork",
-                "Artwork background",
-                "A title page",
-                "Transparent titles"
-              ]}
-              onSelect={handleSelectPackage}
-            />
-            <PricingCard 
-              title="Paperback Package"
-              price="250 USD"
-              features={[
-                "The ebook cover",
-                "The paperback cover",
-                "No title cover artwork",
-                "Artwork background",
-                "A title page",
-                "Transparent titles"
-              ]}
-              note="If you need BOTH paperback and hardback files for the same edition, it will be an extra 20 USD."
-              onSelect={handleSelectPackage}
-            />
-            <PricingCard 
-              title="Dustjacket Package"
-              price="300 USD"
-              features={[
-                "The ebook cover",
-                "Paperback/Regular hardback cover",
-                "The dustjacket cover",
-                "No title cover artwork",
-                "Artwork background",
-                "Title page & Transparent titles"
-              ]}
-              note="Need a design for the naked hardcover? See the package below."
-              onSelect={handleSelectPackage}
-            />
-            
-          </div>
-
-          {/* Add-ons Section */}
-          <div className="max-w-4xl mx-auto bg-white/5 border border-amber-500/20 rounded-sm p-8 md:p-12 relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-4 text-amber-500/10">
-               <Star size={120} strokeWidth={0.5} />
-             </div>
-             <h3 className="text-3xl font-serif text-amber-200 mb-8 relative z-10">Magical Add-ons</h3>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12 relative z-10 font-sans">
-               <AddOnItem name="Audiobook Cover" price="30 USD" />
-               <AddOnItem name="Bookmark Design" price="20 USD" />
-               <AddOnItem name="Title & Cover Reveal" price="20 USD" />
-               <AddOnItem name="Promotional Story Quotes" price="10 USD each" />
-               <AddOnItem name="3D Mockup" price="20 USD each" />
              </div>
           </div>
         </section>
@@ -630,6 +586,77 @@ I have read and agreed to the Terms of Service.`;
          
         </section>
 
+        {/* SERVICES (Formerly Pricing) */}
+        <section id="services" className="py-32 border-t border-amber-500/10">
+          <div className="text-center mb-20 space-y-4">
+            <h2 className="text-5xl font-serif text-amber-100 flex justify-center items-center gap-4">
+              <div className="h-px w-12 bg-amber-500/50"></div>
+              <span>Services</span>
+              <div className="h-px w-12 bg-amber-500/50"></div>
+            </h2>
+            <p className="text-amber-200/50 font-sans tracking-wide">CHOOSE YOUR ARTIFACT PACKAGE</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+            <PricingCard 
+              title="Ebook Package"
+              price="160 USD"
+              features={[
+                "The ebook cover",
+                "No title cover artwork",
+                "Artwork background",
+                "A title page",
+                "Transparent titles"
+              ]}
+              onSelect={handleSelectPackage}
+            />
+            <PricingCard 
+              title="Paperback Package"
+              price="250 USD"
+              features={[
+                "The ebook cover",
+                "The paperback cover",
+                "No title cover artwork",
+                "Artwork background",
+                "A title page",
+                "Transparent titles"
+              ]}
+              note="If you need BOTH paperback and hardback files for the same edition, it will be an extra 20 USD."
+              onSelect={handleSelectPackage}
+            />
+            <PricingCard 
+              title="Dustjacket Package"
+              price="300 USD"
+              features={[
+                "The ebook cover",
+                "Paperback/Regular hardback cover",
+                "The dustjacket cover",
+                "No title cover artwork",
+                "Artwork background",
+                "Title page & Transparent titles"
+              ]}
+              note="Need a design for the naked hardcover? See the package below."
+              onSelect={handleSelectPackage}
+            />
+            
+          </div>
+
+          {/* Add-ons Section */}
+          <div className="max-w-4xl mx-auto bg-white/5 border border-amber-500/20 rounded-sm p-8 md:p-12 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 text-amber-500/10">
+               <Star size={120} strokeWidth={0.5} />
+             </div>
+             <h3 className="text-3xl font-serif text-amber-200 mb-8 relative z-10">Magical Add-ons</h3>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12 relative z-10 font-sans">
+               <AddOnItem name="Audiobook Cover" price="30 USD" />
+               <AddOnItem name="Bookmark Design" price="20 USD" />
+               <AddOnItem name="Title & Cover Reveal" price="20 USD" />
+               <AddOnItem name="Promotional Story Quotes" price="10 USD each" />
+               <AddOnItem name="3D Mockup" price="20 USD each" />
+             </div>
+          </div>
+        </section>
+
         {/* CONTACT SECTION WITH FORM */}
         <section id="contact" className="py-32 border-t border-amber-500/10">
           <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 px-6">
@@ -645,14 +672,23 @@ I have read and agreed to the Terms of Service.`;
               </p>
               
               <div className="space-y-4 font-sans text-sm tracking-wide">
-                <a href="mailto:lilithtpdolohov@gmail.com" className="flex items-center gap-4 text-amber-200/80 hover:text-amber-100 transition-colors">
-                  <Mail className="text-amber-500" size={20} />
-                  <span>lilithtpdolohov@gmail.com</span>
-                </a>
-                <div className="flex items-center gap-4 text-amber-200/80">
+                <div className="flex items-center gap-4">
+                  <a href="mailto:lilithtpdolohov@gmail.com" className="flex items-center gap-4 text-amber-200/80 hover:text-amber-100 transition-colors">
+                    <Mail className="text-amber-500" size={20} />
+                    <span>lilithtpdolohov@gmail.com</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    className="text-[10px] uppercase tracking-widest px-2 py-1 border border-amber-500/40 text-amber-200/70 hover:text-amber-100 hover:border-amber-500/70 transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <a href="https://instagram.com/lilith.p.6" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-amber-200/80 hover:text-amber-100 transition-colors">
                   <Instagram className="text-amber-500" size={20} />
                   <span>@lilith.p.6</span>
-                </div>
+                </a>
               </div>
 
               <div className="pt-8 flex gap-4">
@@ -668,7 +704,8 @@ I have read and agreed to the Terms of Service.`;
                  <img
                    src="/assets/Logo.png"
                    alt="Lilith Dolohov logo watermark"
-                   className="w-[160px] h-[160px] object-contain"
+                   className="w-[160px] h-[160px] object-contain select-none"
+                   draggable={false}
                  />
                </div>
                
