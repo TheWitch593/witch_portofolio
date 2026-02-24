@@ -14,6 +14,15 @@ import {
   ArrowRight
 } from 'lucide-react';
 
+// ✅ FIX: NAV_ITEMS extracted as a constant — no more duplication
+const NAV_ITEMS = [
+  { id: 'home', label: 'Home' },
+  { id: 'about', label: 'About' },
+  { id: 'portfolio', label: 'Portfolio' },
+  { id: 'services', label: 'Services' },
+  { id: 'contact', label: 'Contact' }
+];
+
 const App = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -24,18 +33,23 @@ const App = () => {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isAboutInView, setIsAboutInView] = useState(false);
   const aboutRef = useRef(null);
-  
-  // Form State
+
+  // ✅ FIX: formStatus replaces direct DOM manipulation of submit button
+  const [formStatus, setFormStatus] = useState('idle'); // 'idle' | 'sending' | 'success' | 'error'
+
+  // ✅ FIX: formErrors for inline validation instead of alert()
+  const [formErrors, setFormErrors] = useState({});
+
+  // ✅ FIX: default service matches actual select options
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    service: 'Full Book Cover Design',
+    service: 'Ebook Package',
     addons: '',
     details: '',
     agreedToTerms: false
   });
 
-  // Handle Mouse Move for the "Torch" effect
   useEffect(() => {
     const handleMouseMove = (e) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -50,15 +64,14 @@ const App = () => {
       const heroThreshold = window.innerHeight * 0.8;
       setIsHeroInView(totalScroll < heroThreshold);
 
-      const sectionIds = ['home', 'about', 'portfolio', 'services', 'contact'];
       const scrollY = totalScroll + 140;
       let currentSection = 'home';
 
-      for (const id of sectionIds) {
-        const section = document.getElementById(id);
+      for (const item of NAV_ITEMS) {
+        const section = document.getElementById(item.id);
         if (!section) continue;
         if (scrollY >= section.offsetTop) {
-          currentSection = id;
+          currentSection = item.id;
         }
       }
 
@@ -133,49 +146,35 @@ const App = () => {
     }
   };
 
+  // ✅ FIX: Inline validation — returns an errors object instead of calling alert()
+  const validate = () => {
+    const errors = {};
+    if (!formData.name.trim()) errors.name = 'Please enter your name.';
+    if (!formData.email.trim()) {
+      errors.email = 'Please enter your email.';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) errors.email = 'Please enter a valid email address.';
+    }
+    if (!formData.details.trim()) errors.details = 'Please provide project details.';
+    if (!formData.agreedToTerms) errors.terms = 'You must agree to the Terms of Service.';
+    return errors;
+  };
+
+  // ✅ FIX: handleSubmit uses formStatus state — no direct DOM manipulation
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
-    if (!formData.name.trim()) {
-      alert('Please enter your name');
-      return;
-    }
-    
-    if (!formData.email.trim()) {
-      alert('Please enter your email');
-      return;
-    }
-    
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      alert('Please enter a valid email address');
-      return;
-    }
-    
-    if (!formData.details.trim()) {
-      alert('Please provide project details');
-      return;
-    }
-    
-    if (!formData.agreedToTerms) {
-      alert('Please read and agree to the Terms of Service');
+
+    const errors = validate();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
 
-    // Prepare form data for submission
-    const formElement = e.target;
-    const submitButton = formElement.querySelector('button[type="submit"]');
-    
-    // Disable submit button and show loading state
-    if (submitButton) {
-      submitButton.disabled = true;
-      submitButton.textContent = 'Sending...';
-    }
+    setFormErrors({});
+    setFormStatus('sending');
 
     try {
-      // Using Formspree (free service, no backend needed)
       const response = await fetch('https://formspree.io/f/mblnzwjl', {
         method: 'POST',
         headers: {
@@ -205,8 +204,8 @@ Contact Email: ${formData.email}
 
       const result = await response.json();
 
-      if (result.success) {
-        // Reset form
+      if (result.ok || result.success) {
+        setFormStatus('success');
         setFormData({
           name: '',
           email: '',
@@ -220,8 +219,9 @@ Contact Email: ${formData.email}
       }
     } catch (error) {
       console.error('Form submission error:', error);
-      
-      // Fallback to mailto if API fails
+      setFormStatus('error');
+
+      // Fallback mailto
       const subject = encodeURIComponent(`Commission Request: ${formData.service}`);
       const bodyContent = `Name: ${formData.name}
 Email: ${formData.email}
@@ -233,28 +233,18 @@ ${formData.details}
 
 I have read and agreed to the Terms of Service.`;
       const body = encodeURIComponent(bodyContent);
-      
       window.location.href = `mailto:lilithtpdolohov@gmail.com?subject=${subject}&body=${body}`;
-      
-      alert('Opening your email client as backup. If it doesn\'t open, please email directly to lilithtpdolohov@gmail.com');
-    } finally {
-      // Re-enable submit button
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send Inquiry';
-      }
     }
   };
 
   return (
     <div className="relative min-h-screen bg-[#130b20] text-amber-50 overflow-x-hidden font-serif selection:bg-amber-500/30 selection:text-amber-200">
-      
+
       {/* Terms of Service Modal */}
       {showTerms && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-[#1a0f2e] border border-amber-500/30 rounded-sm w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl relative">
             
-            {/* Modal Header */}
             <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#130b20]">
               <h3 className="text-2xl font-serif text-amber-100 flex items-center gap-3">
                 <Shield className="text-amber-500" />
@@ -265,7 +255,6 @@ I have read and agreed to the Terms of Service.`;
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-8 overflow-y-auto font-sans text-amber-100/80 leading-relaxed space-y-8 custom-scrollbar">
               
               <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-sm text-sm">
@@ -321,7 +310,6 @@ I have read and agreed to the Terms of Service.`;
               </section>
             </div>
 
-            {/* Modal Footer */}
             <div className="p-6 border-t border-white/10 bg-[#130b20] flex justify-end">
               <button 
                 onClick={() => setShowTerms(false)}
@@ -338,13 +326,11 @@ I have read and agreed to the Terms of Service.`;
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a0f2e] via-[#130b20] to-[#0a0510]"></div>
-        
-        {/* Animated Orbs - Purple and Gold */}
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-900/30 rounded-full blur-[128px] animate-pulse"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-600/20 rounded-full blur-[128px] animate-pulse delay-1000"></div>
       </div>
 
-      {/* Magical Cursor Torch Effect - Golden Glow */}
+      {/* Magical Cursor Torch Effect */}
       <div 
         className="fixed z-50 pointer-events-none mix-blend-screen transition-opacity duration-300"
         style={{
@@ -366,7 +352,7 @@ I have read and agreed to the Terms of Service.`;
         }}
       />
 
-      {/* Progress Bar (Gold) */}
+      {/* Progress Bar */}
       <div className="fixed top-0 left-0 h-1 bg-gradient-to-r from-purple-800 via-amber-500 to-purple-800 z-50 transition-all duration-100" style={{ width: `${scrollProgress * 100}%` }}></div>
 
       {copiedEmail && (
@@ -387,14 +373,10 @@ I have read and agreed to the Terms of Service.`;
             />
             <span className="tracking-widest uppercase text-lg">Lilith Dolohov</span>
           </div>
+
+          {/* ✅ FIX: Using NAV_ITEMS constant — no duplication */}
           <div className="hidden md:flex gap-6 text-xs font-medium tracking-widest uppercase text-amber-200/60 font-sans">
-            {[
-              { id: 'home', label: 'Home' },
-              { id: 'about', label: 'About' },
-              { id: 'portfolio', label: 'Portfolio' },
-              { id: 'services', label: 'Services' },
-              { id: 'contact', label: 'Contact' }
-            ].map((item) => (
+            {NAV_ITEMS.map((item) => (
               <button 
                 key={item.id} 
                 onClick={() => scrollToSection(item.id)}
@@ -412,6 +394,7 @@ I have read and agreed to the Terms of Service.`;
               </button>
             ))}
           </div>
+
           <button
             type="button"
             onClick={() => setIsMobileNavOpen((prev) => !prev)}
@@ -427,16 +410,11 @@ I have read and agreed to the Terms of Service.`;
             </div>
           </button>
         </div>
+
         {isMobileNavOpen && (
           <div className="md:hidden border-t border-amber-500/10 bg-[#130b20]/95 backdrop-blur-md px-6 py-4">
             <div className="flex flex-col gap-3 text-xs font-medium tracking-widest uppercase text-amber-200/70 font-sans">
-              {[
-                { id: 'home', label: 'Home' },
-                { id: 'about', label: 'About' },
-                { id: 'portfolio', label: 'Portfolio' },
-                { id: 'services', label: 'Services' },
-                { id: 'contact', label: 'Contact' }
-              ].map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
@@ -456,7 +434,6 @@ I have read and agreed to the Terms of Service.`;
         {/* HERO SECTION */}
         <section id="home" className="min-h-[90vh] flex flex-col justify-center items-center text-center pt-20">
           <div className="space-y-8 max-w-4xl relative">
-            {/* Decorative Elements */}
             <div className="absolute -top-20 left-1/2 -translate-x-1/2 text-amber-500/10 animate-spin-slow pointer-events-none">
                <Star size={300} strokeWidth={0.5} />
             </div>
@@ -493,29 +470,23 @@ I have read and agreed to the Terms of Service.`;
               </button>
             </div>
           </div>
-
         </section>
 
-        <SectionNav
-          prevId={null}
-          nextId="about"
-          onNavigate={scrollToSection}
-        />
+        <SectionNav prevId={null} nextId="about" onNavigate={scrollToSection} />
 
         {/* ABOUT SECTION */}
         <section id="about" className="py-32 border-t border-amber-500/10">
           <div ref={aboutRef} className="group flex flex-col md:flex-row gap-16 items-center">
              <div className="md:w-1/2 relative">
-                {/* Decorative Frame for Image */}
                 <div className="absolute -inset-4 border border-amber-500/20 rotate-3 rounded-sm"></div>
                 <div className="absolute -inset-4 border border-purple-500/20 -rotate-2 rounded-sm"></div>
                 <div className="relative h-[500px] w-full bg-[#0a0510] border border-white/10 flex items-center justify-center overflow-hidden">
                   <div className={`absolute inset-0 transition-opacity duration-700 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.25),transparent_55%)] ${isAboutInView ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}></div>
                   <div className="absolute inset-0 border border-amber-500/20 mix-blend-screen opacity-60"></div>
                   <img 
-                  src="/assets/eu.png" 
-                  alt="Lilith Dolohov" 
-                  className={`relative h-[500px] w-full object-cover border border-white/10 grayscale brightness-75 transition-all duration-700 ${isAboutInView ? 'grayscale-0 brightness-100' : ''} group-hover:grayscale-0 group-hover:brightness-100`}
+                    src="/assets/eu.png" 
+                    alt="Lilith Dolohov" 
+                    className={`relative h-[500px] w-full object-cover border border-white/10 grayscale brightness-75 transition-all duration-700 ${isAboutInView ? 'grayscale-0 brightness-100' : ''} group-hover:grayscale-0 group-hover:brightness-100`}
                   />
                 </div>
              </div>
@@ -523,14 +494,12 @@ I have read and agreed to the Terms of Service.`;
              <div className="md:w-1/2 space-y-8">
                <h2 className="text-5xl font-serif text-amber-100">The Arcanist</h2>
                <div className="h-px w-20 bg-amber-500/50"></div>
-               
                <p className="text-amber-100/70 text-lg leading-relaxed font-sans font-light">
-                 I'm Lilith, a 21-year-old Romanian artist working at the intersection of fine art and fantasy. For the past seven years, I've specialized in crafting book covers through photomanipulation and realistic digital illustration,transforming stories into their visual essence.
+                 I'm Lilith, a 21-year-old Romanian artist working at the intersection of fine art and fantasy. For the past seven years, I've specialized in crafting book covers through photomanipulation and realistic digital illustration, transforming stories into their visual essence.
                </p>
                <p className="text-amber-100/70 text-lg leading-relaxed font-sans font-light">
-                 When I'm not editing in Photoshop, you'll find me writing code or exploring old bookstores for typography inspiration, studying composition theory, or experimenting with new visual techniques. I believe a book cover is more than packaging,it's an invitation, the visual first line that draws readers into a world. My work is dedicated to making that moment unforgettable.
+                 When I'm not editing in Photoshop, you'll find me writing code or exploring old bookstores for typography inspiration, studying composition theory, or experimenting with new visual techniques. I believe a book cover is more than packaging — it's an invitation, the visual first line that draws readers into a world. My work is dedicated to making that moment unforgettable.
                </p>
-               
                <div className="flex gap-4 pt-4">
                  <div className="text-center p-4 border border-white/5 bg-white/5 rounded-sm">
                    <h4 className="text-3xl font-serif text-amber-400">7+</h4>
@@ -545,18 +514,12 @@ I have read and agreed to the Terms of Service.`;
           </div>
         </section>
 
-        <SectionNav
-          prevId="home"
-          nextId="portfolio"
-          onNavigate={scrollToSection}
-        />
+        <SectionNav prevId="home" nextId="portfolio" onNavigate={scrollToSection} />
 
         {/* PORTFOLIO GRID */}
         <section id="portfolio" className="py-32 border-t border-amber-500/10">
           <div className="text-center mb-20 space-y-4">
-            <h2 className="text-5xl font-serif text-amber-100">
-              Selected Works
-            </h2>
+            <h2 className="text-5xl font-serif text-amber-100">Selected Works</h2>
             <div className="flex justify-center items-center gap-4 text-amber-500/40">
               <div className="h-px w-12 bg-current"></div>
               <Star className="w-4 h-4" />
@@ -565,92 +528,23 @@ I have read and agreed to the Terms of Service.`;
             <p className="text-amber-200/50 font-sans tracking-wide">A CURATED COLLECTION OF BOOK COVERS</p>
           </div>
 
-          {/* Book Grid - Vertical Aspect Ratio */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 px-4 md:px-0">
-            
-            <BookCover 
-              title="Promises in the"
-              author="Scarlett Winters "
-              genre="Dark Romance"
-              color="from-slate-900 to-gray-800"
-              image="/assets/promises.jpg"
-              placeholderText="Shadow Figure"
-            />
-            <BookCover 
-              title="Drumul înapoi spre mine"
-              author="Anna Tyboleyn"
-              genre="Contemporary Fiction"
-              color="from-purple-900 to-indigo-900"
-              image="/assets/IMG_20250216_173512_648.jpg"
-              placeholderText="Drumul"
-            />
-            <BookCover 
-              title="Orgolii"
-              author="Anna Tyboleyn"
-              genre="Dark Romance"
-              color="from-red-900 to-rose-900"
-              image="/assets/IMG_20250216_221331_100.jpg"
-              placeholderText="Orgolii"
-            />
-            <BookCover 
-              title="Îngerul meu căzut"
-              author="Daria"
-              genre="Dark Fantasy Romance"
-              color="from-cyan-900 to-blue-900"
-              image="/assets/îngerul.jpg"
-              placeholderText="Space Void"
-            />
-             <BookCover 
-              title="Eroare"
-              author="VLADISLAVA PANFILI"
-              genre="Thriller&Mystery"
-              color="from-amber-900 to-yellow-900"
-              image="/assets/eroare.jpg"
-              placeholderText="Golden Gear"
-            />
-            <BookCover 
-              title="Threaded in Red"
-              author="Nala"
-              genre="Dark Romance"
-              color="from-emerald-900 to-teal-900"
-              image="/assets/threats.jpg"
-              placeholderText="Golden Birdcage"
-            />
-            <BookCover 
-              title="Pasiunea mea secretă"
-              author="Anna Tyboleyn"
-              genre="Romance"
-              color="from-purple-900 to-indigo-900"
-              image="/assets/pasiunea.jpg"
-              placeholderText="Drumul"
-            />
-            <BookCover 
-              title="Aphelion"
-              author="Aurette"
-              genre="fantasy"
-              color="from-red-900 to-rose-900"
-              image="/assets/aphe.jpg"
-              placeholderText="Orgolii"
-            />
-             <BookCover
-              title="Un Babel"
-              author="Nala"
-              genre="YA Romance"
-              color="from-amber-900 to-yellow-900"
-              image="/assets/un.jpg"
-              placeholderText="Golden Gear"
-            />
+            {/* ✅ FIX: loading="lazy" added to all BookCover images */}
+            <BookCover title="Promises in the" author="Scarlett Winters" genre="Dark Romance" color="from-slate-900 to-gray-800" image="/assets/promises.jpg" />
+            <BookCover title="Drumul înapoi spre mine" author="Anna Tyboleyn" genre="Contemporary Fiction" color="from-purple-900 to-indigo-900" image="/assets/IMG_20250216_173512_648.jpg" />
+            <BookCover title="Orgolii" author="Anna Tyboleyn" genre="Dark Romance" color="from-red-900 to-rose-900" image="/assets/IMG_20250216_221331_100.jpg" />
+            <BookCover title="Îngerul meu căzut" author="Daria" genre="Dark Fantasy Romance" color="from-cyan-900 to-blue-900" image="/assets/îngerul.jpg" />
+            <BookCover title="Eroare" author="VLADISLAVA PANFILI" genre="Thriller & Mystery" color="from-amber-900 to-yellow-900" image="/assets/eroare.jpg" />
+            <BookCover title="Threaded in Red" author="Nala" genre="Dark Romance" color="from-emerald-900 to-teal-900" image="/assets/threats.jpg" />
+            <BookCover title="Pasiunea mea secretă" author="Anna Tyboleyn" genre="Romance" color="from-purple-900 to-indigo-900" image="/assets/pasiunea.jpg" />
+            <BookCover title="Aphelion" author="Aurette" genre="Fantasy" color="from-red-900 to-rose-900" image="/assets/aphe.jpg" />
+            <BookCover title="Un Babel" author="Nala" genre="YA Romance" color="from-amber-900 to-yellow-900" image="/assets/un.jpg" />
           </div>
-         
         </section>
 
-        <SectionNav
-          prevId="about"
-          nextId="services"
-          onNavigate={scrollToSection}
-        />
+        <SectionNav prevId="about" nextId="services" onNavigate={scrollToSection} />
 
-        {/* SERVICES (Formerly Pricing) */}
+        {/* SERVICES */}
         <section id="services" className="py-32 border-t border-amber-500/10">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-5xl font-serif text-amber-100 flex justify-center items-center gap-4">
@@ -665,47 +559,25 @@ I have read and agreed to the Terms of Service.`;
             <PricingCard 
               title="Ebook Package"
               price="160 USD"
-              features={[
-                "The ebook cover",
-                "No title cover artwork",
-                "Artwork background",
-                "A title page",
-                "Transparent titles"
-              ]}
+              features={["The ebook cover", "No title cover artwork", "Artwork background", "A title page", "Transparent titles"]}
               onSelect={handleSelectPackage}
             />
             <PricingCard 
               title="Paperback Package"
               price="250 USD"
-              features={[
-                "The ebook cover",
-                "The paperback cover",
-                "No title cover artwork",
-                "Artwork background",
-                "A title page",
-                "Transparent titles"
-              ]}
+              features={["The ebook cover", "The paperback cover", "No title cover artwork", "Artwork background", "A title page", "Transparent titles"]}
               note="If you need BOTH paperback and hardback files for the same edition, it will be an extra 20 USD."
               onSelect={handleSelectPackage}
             />
             <PricingCard 
               title="Dustjacket Package"
               price="300 USD"
-              features={[
-                "The ebook cover",
-                "Paperback/Regular hardback cover",
-                "The dustjacket cover",
-                "No title cover artwork",
-                "Artwork background",
-                "Title page & Transparent titles"
-              ]}
+              features={["The ebook cover", "Paperback/Regular hardback cover", "The dustjacket cover", "No title cover artwork", "Artwork background", "Title page & Transparent titles"]}
               note="Need a design for the naked hardcover? See the package below."
               onSelect={handleSelectPackage}
             />
-            
           </div>
 
-          {/* Add-ons Section */}
           <div className="max-w-4xl mx-auto bg-white/5 border border-amber-500/20 rounded-sm p-8 md:p-12 relative overflow-hidden">
              <div className="absolute top-0 right-0 p-4 text-amber-500/10">
                <Star size={120} strokeWidth={0.5} />
@@ -721,17 +593,12 @@ I have read and agreed to the Terms of Service.`;
           </div>
         </section>
 
-        <SectionNav
-          prevId="portfolio"
-          nextId="contact"
-          onNavigate={scrollToSection}
-        />
+        <SectionNav prevId="portfolio" nextId="contact" onNavigate={scrollToSection} />
 
-        {/* CONTACT SECTION WITH FORM */}
+        {/* CONTACT SECTION */}
         <section id="contact" className="py-32 border-t border-amber-500/10">
           <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 px-6">
             
-            {/* Contact Info Side */}
             <div className="md:w-1/3 space-y-8">
               <div>
                 <h2 className="text-4xl font-serif text-amber-100 mb-4">Summon Me</h2>
@@ -761,14 +628,14 @@ I have read and agreed to the Terms of Service.`;
                 </a>
               </div>
 
+              {/* ✅ FIX: Removed dead Behance href="#" — only real links shown */}
               <div className="pt-8 flex gap-4">
                  <SocialLink icon={<Instagram />} href="https://instagram.com/lilith.p.6" label="Instagram" />
                  <SocialLink icon={<Mail />} href="mailto:lilithtpdolohov@gmail.com" label="Email" />
-                 <SocialLink icon={<ExternalLink />} href="#" label="Behance" />
               </div>
             </div>
 
-            {/* Contact Form Side */}
+            {/* Contact Form */}
             <div className="md:w-2/3 bg-white/5 p-8 md:p-12 border border-white/10 rounded-sm relative">
                <div className="absolute top-0 right-0 p-4 opacity-20">
                  <img
@@ -778,8 +645,27 @@ I have read and agreed to the Terms of Service.`;
                    draggable={false}
                  />
                </div>
-               
-               <form onSubmit={handleSubmit} className="space-y-6 font-sans">
+
+               {/* ✅ FIX: Success state replaces form after submission */}
+               {formStatus === 'success' ? (
+                 <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-6">
+                   <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                     <Sparkles className="text-amber-400 w-8 h-8" />
+                   </div>
+                   <h3 className="text-3xl font-serif text-amber-100">Your scroll has been sent.</h3>
+                   <p className="text-amber-200/60 font-sans max-w-sm leading-relaxed">
+                     Thank you for reaching out. I'll review your brief and get back to you within 1–3 business days.
+                   </p>
+                   <button
+                     type="button"
+                     onClick={() => setFormStatus('idle')}
+                     className="mt-4 text-xs uppercase tracking-widest text-amber-500 hover:text-amber-300 border border-amber-500/30 hover:border-amber-500/60 px-6 py-2 transition-colors font-sans"
+                   >
+                     Send Another Inquiry
+                   </button>
+                 </div>
+               ) : (
+               <form onSubmit={handleSubmit} className="space-y-6 font-sans" noValidate>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <div className="space-y-2">
                      <label htmlFor="contact-name" className="text-xs uppercase tracking-widest text-amber-500/70">Your Name *</label>
@@ -788,9 +674,10 @@ I have read and agreed to the Terms of Service.`;
                       type="text" 
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      required
-                      className="w-full bg-[#0a0510] border border-white/10 p-4 text-amber-100 focus:border-amber-500/50 focus:outline-none transition-colors" 
+                      className={`w-full bg-[#0a0510] border p-4 text-amber-100 focus:outline-none transition-colors ${formErrors.name ? 'border-red-500/70' : 'border-white/10 focus:border-amber-500/50'}`}
                     />
+                    {/* ✅ FIX: Inline error messages */}
+                    {formErrors.name && <p className="text-red-400 text-xs mt-1">{formErrors.name}</p>}
                    </div>
                    <div className="space-y-2">
                      <label htmlFor="contact-email" className="text-xs uppercase tracking-widest text-amber-500/70">Your Email *</label>
@@ -799,9 +686,9 @@ I have read and agreed to the Terms of Service.`;
                       type="email" 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      required
-                      className="w-full bg-[#0a0510] border border-white/10 p-4 text-amber-100 focus:border-amber-500/50 focus:outline-none transition-colors" 
+                      className={`w-full bg-[#0a0510] border p-4 text-amber-100 focus:outline-none transition-colors ${formErrors.email ? 'border-red-500/70' : 'border-white/10 focus:border-amber-500/50'}`}
                     />
+                    {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
                    </div>
                  </div>
                  
@@ -823,12 +710,12 @@ I have read and agreed to the Terms of Service.`;
                    <label htmlFor="contact-addons" className="text-xs uppercase tracking-widest text-amber-500/70">Add-ons (Optional)</label>
                    <input 
                      id="contact-addons"
-                      type="text" 
-                      value={formData.addons}
-                      onChange={(e) => setFormData({...formData, addons: e.target.value})}
-                      placeholder="e.g. Audiobook Cover, 3D Mockup"
-                      className="w-full bg-[#0a0510] border border-white/10 p-4 text-amber-100 focus:border-amber-500/50 focus:outline-none transition-colors" 
-                    />
+                     type="text" 
+                     value={formData.addons}
+                     onChange={(e) => setFormData({...formData, addons: e.target.value})}
+                     placeholder="e.g. Audiobook Cover, 3D Mockup"
+                     className="w-full bg-[#0a0510] border border-white/10 p-4 text-amber-100 focus:border-amber-500/50 focus:outline-none transition-colors" 
+                   />
                  </div>
 
                  <div className="space-y-2">
@@ -837,13 +724,12 @@ I have read and agreed to the Terms of Service.`;
                     id="contact-details"
                     value={formData.details}
                     onChange={(e) => setFormData({...formData, details: e.target.value})}
-                    required
                     placeholder="Tell me about your book, genre, themes, and any specific ideas you have..."
-                    className="w-full bg-[#0a0510] border border-white/10 p-4 text-amber-100 focus:border-amber-500/50 focus:outline-none transition-colors h-32 resize-none"
+                    className={`w-full bg-[#0a0510] border p-4 text-amber-100 focus:outline-none transition-colors h-32 resize-none ${formErrors.details ? 'border-red-500/70' : 'border-white/10 focus:border-amber-500/50'}`}
                    ></textarea>
+                   {formErrors.details && <p className="text-red-400 text-xs mt-1">{formErrors.details}</p>}
                  </div>
 
-                 {/* Terms of Service Agreement */}
                  <div className="space-y-4 pt-2">
                     <div className="flex items-center gap-3">
                       <input 
@@ -857,6 +743,7 @@ I have read and agreed to the Terms of Service.`;
                         I have read and agree to the Terms of Service.
                       </label>
                     </div>
+                    {formErrors.terms && <p className="text-red-400 text-xs">{formErrors.terms}</p>}
                     
                     <button 
                       type="button" 
@@ -868,21 +755,32 @@ I have read and agreed to the Terms of Service.`;
                     </button>
                  </div>
 
+                 {/* ✅ FIX: Button uses formStatus state — no DOM manipulation */}
                  <button 
                   type="submit"
-                  disabled={!formData.agreedToTerms}
+                  disabled={formStatus === 'sending'}
                   className={`w-full py-4 border font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3
-                    ${formData.agreedToTerms 
-                      ? 'bg-gradient-to-r from-purple-700 to-purple-900 border-amber-500/30 text-amber-100 hover:shadow-[0_0_25px_rgba(168,85,247,0.4)] cursor-pointer' 
-                      : 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'}
+                    ${formStatus === 'sending'
+                      ? 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'
+                      : formData.agreedToTerms
+                        ? 'bg-gradient-to-r from-purple-700 to-purple-900 border-amber-500/30 text-amber-100 hover:shadow-[0_0_25px_rgba(168,85,247,0.4)] cursor-pointer'
+                        : 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'
+                    }
                   `}
                  >
                    <Send size={16} />
-                   Send Inquiry
+                   {formStatus === 'sending' ? 'Sending...' : 'Send Inquiry'}
                  </button>
-               </form>
-            </div>
 
+                 {/* ✅ FIX: Error state feedback inline */}
+                 {formStatus === 'error' && (
+                   <p className="text-red-400 text-xs text-center font-sans">
+                     Something went wrong. Your email client has been opened as a fallback.
+                   </p>
+                 )}
+               </form>
+               )}
+            </div>
           </div>
         </section>
 
@@ -909,12 +807,10 @@ const PricingCard = ({ title, price, features, note, highlight, onSelect }) => (
          Most Popular
        </div>
     )}
-    
     <div className="text-center mb-6 border-b border-white/10 pb-6">
       <h3 className="text-2xl font-serif text-amber-100 mb-2">{title}</h3>
       <div className="text-amber-400 font-sans font-bold text-lg tracking-wider">{price}</div>
     </div>
-    
     <ul className="space-y-4 mb-8 flex-grow">
       {features.map((feature, i) => (
         <li key={i} className="flex items-start gap-3 text-sm text-amber-200/70 font-sans leading-relaxed">
@@ -923,13 +819,11 @@ const PricingCard = ({ title, price, features, note, highlight, onSelect }) => (
         </li>
       ))}
     </ul>
-    
     {note && (
       <div className="mt-auto pt-4 border-t border-white/5 text-[11px] text-amber-200/40 italic text-center font-sans">
         * {note}
       </div>
     )}
-    
     <button 
       onClick={() => onSelect(title)}
       className={`w-full mt-6 py-3 border font-bold uppercase tracking-widest text-xs transition-all duration-300
@@ -950,33 +844,25 @@ const AddOnItem = ({ name, price }) => (
   </div>
 );
 
-const BookCover = ({ title, author, genre, color, placeholderText, image }) => (
+// ✅ FIX: loading="lazy" added — images load only when scrolled into view
+const BookCover = ({ title, author, genre, color, image }) => (
   <div className="group cursor-pointer relative perspective-1000">
-    {/* Book Aspect Ratio Container (2:3 ratio standard for books) */}
     <div className="relative w-full pb-[150%] shadow-2xl transition-all duration-500 transform group-hover:-translate-y-3 group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.7)]">
-      
-      {/* Background/Image Placeholder */}
       <div className="absolute inset-0 overflow-hidden border border-white/10">
         {image ? (
           <img 
             src={image}
-            alt={`${title} cover`}
+            alt={`${title} book cover`}
+            loading="lazy"
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
           <div className={`absolute inset-0 bg-gradient-to-br ${color}`} />
         )}
-
-        {/* Decorative pattern overlay */}
         <div className="absolute inset-0 opacity-25 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]"></div>
-        
-        
-        {/* Shine Effect */}
         <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform"></div>
       </div>
     </div>
-
-    {/* Info below book */}
     <div className="mt-4 text-center opacity-60 group-hover:opacity-100 transition-opacity duration-300">
       <h4 className="text-amber-100 font-serif text-lg">{title}</h4>
       <p className="text-xs text-amber-500/70 font-sans uppercase tracking-widest mt-1">{genre}</p>
