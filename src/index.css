@@ -13,3 +13,13 @@
   background: rgba(245, 158, 11, 0.3);
   border-radius: 4px;
 }
+
+/* Globally prevent image downloading/dragging */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
