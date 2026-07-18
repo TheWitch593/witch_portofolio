@@ -8,6 +8,7 @@ import Portfolio from './pages/Portfolio';
 import Services from './pages/Services';
 import Contact from './pages/Contact';
 import Premades from './pages/Premades';
+import PremadeClaim from './pages/PremadeClaim';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="services" element={<Services />} />
           <Route path="contact" element={<Contact />} />
           <Route path="premades" element={<Premades />} />
+          <Route path="premades/:coverId" element={<PremadeClaim />} />
         </Route>
       </Routes>
     </Router>
