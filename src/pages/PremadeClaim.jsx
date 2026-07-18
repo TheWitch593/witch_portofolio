@@ -171,9 +171,6 @@ const PremadeClaim = () => {
               <Star className="w-4 h-4" /> Standalone Claim Page
             </div>
             <h1 className="text-3xl font-serif text-amber-100 mb-2">Claim this cover</h1>
-            <p className="text-amber-200/60 mb-8">
-              {selectedCover.title} - choose the currency you want to buy in. The amount stays fixed to the price you set for that cover.
-            </p>
 
             {state.succeeded ? (
               <div className="flex flex-col items-center justify-center h-full space-y-6 text-center animate-fade-in py-12">
